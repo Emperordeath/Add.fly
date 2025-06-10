@@ -21,6 +21,8 @@ _k9m4v.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
 _k9m4v.BorderColor3 = Color3.fromRGB(120, 0, 0)
 _k9m4v.Position = UDim2.new(0.100320168, 0, 0.379746825, 0)
 _k9m4v.Size = UDim2.new(0, 190, 0, 57)
+_k9m4v.Active = true
+_k9m4v.Draggable = true
 
 _u2r8p.Name = "up"
 _u2r8p.Parent = _k9m4v
@@ -135,7 +137,6 @@ local _f2n9x = false
 local _tpw = false
 local _ctl = {f = 0, b = 0, l = 0, r = 0}
 local _lct = {f = 0, b = 0, l = 0, r = 0}
-local _ncp = false
 local _ncl = {} -- Store original CanCollide states
 
 game:GetService("StarterGui"):SetCore("SendNotification", { 
@@ -145,14 +146,13 @@ game:GetService("StarterGui"):SetCore("SendNotification", {
     Duration = 5;
 })
 
-_k9m4v.Active = true
-_k9m4v.Draggable = true
-
-local function _z5q3r()
+local function resetHumanoidState()
     local _chr = _w3r8p.Character
     if not _chr or not _chr:FindFirstChildOfClass("Humanoid") then return end
     local _hum = _chr:FindFirstChildOfClass("Humanoid")
+    
     _hum.PlatformStand = false
+    _hum:ChangeState(Enum.HumanoidStateType.Running)
     _hum:SetStateEnabled(Enum.HumanoidStateType.Climbing, true)
     _hum:SetStateEnabled(Enum.HumanoidStateType.FallingDown, true)
     _hum:SetStateEnabled(Enum.HumanoidStateType.Flying, true)
@@ -168,9 +168,9 @@ local function _z5q3r()
     _hum:SetStateEnabled(Enum.HumanoidStateType.Seated, true)
     _hum:SetStateEnabled(Enum.HumanoidStateType.StrafingNoPhysics, true)
     _hum:SetStateEnabled(Enum.HumanoidStateType.Swimming, true)
-    _hum:ChangeState(Enum.HumanoidStateType.RunningNoPhysics)
     _chr.Animate.Disabled = false
-    _ncp = false
+    
+    -- Restore collision states
     for _, _prt in pairs(_chr:GetDescendants()) do
         if _prt:IsA("BasePart") and _ncl[_prt] ~= nil then
             _prt.CanCollide = _ncl[_prt]
@@ -179,7 +179,7 @@ local function _z5q3r()
     _ncl = {}
 end
 
-local function _e8v2m()
+local function enableNoclip()
     local _chr = _w3r8p.Character
     if not _chr then return end
     _ncl = {}
@@ -189,7 +189,6 @@ local function _e8v2m()
             _prt.CanCollide = false
         end
     end
-    _ncp = true
 end
 
 _o7f6y.MouseButton1Click:Connect(function()
@@ -201,7 +200,7 @@ _o7f6y.MouseButton1Click:Connect(function()
     if not _part then return end
 
     if _f2n9x then
-        _e8v2m() -- Enable noclip
+        enableNoclip()
         _hum.PlatformStand = true
         _chr.Animate.Disabled = true
         for _, _v in next, _hum:GetPlayingAnimationTracks() do
@@ -226,11 +225,11 @@ _o7f6y.MouseButton1Click:Connect(function()
 
         local _bg = Instance.new("BodyGyro", _part)
         _bg.P = 9e4
-        _bg.maxTorque = Vector3.new(9e9, 9e9, 9e9)
-        _bg.cframe = _part.CFrame
+        _bg.MaxTorque = Vector3.new(9e9, 9e9, 9e9)
+        _bg.CFrame = _part.CFrame
         local _bv = Instance.new("BodyVelocity", _part)
-        _bv.velocity = Vector3.new(0, 0.1, 0)
-        _bv.maxForce = Vector3.new(9e9, 9e9, 9e9)
+        _bv.Velocity = Vector3.new(0, 0.1, 0)
+        _bv.MaxForce = Vector3.new(9e9, 9e9, 9e9)
 
         task.spawn(function()
             local _spd = 0
@@ -245,22 +244,22 @@ _o7f6y.MouseButton1Click:Connect(function()
                     if _spd < 0 then _spd = 0 end
                 end
                 if (_ctl.l + _ctl.r) ~= 0 or (_ctl.f + _ctl.b) ~= 0 then
-                    _bv.velocity = ((game.Workspace.CurrentCamera.CoordinateFrame.lookVector * (_ctl.f + _ctl.b)) + 
+                    _bv.Velocity = ((game.Workspace.CurrentCamera.CoordinateFrame.lookVector * (_ctl.f + _ctl.b)) + 
                                   ((game.Workspace.CurrentCamera.CoordinateFrame * CFrame.new(_ctl.l + _ctl.r, (_ctl.f + _ctl.b) * 0.2, 0).p) - 
-                                   game.Workspace.CurrentCamera.CoordinateFrame.p)) * _spd
+                                   game.Workspace.CurrentCamera.CoordinateFrame.p)) * _spd * _v9k2m
                     _lct = {f = _ctl.f, b = _ctl.b, l = _ctl.l, r = _ctl.r}
                 elseif (_ctl.l + _ctl.r) == 0 and (_ctl.f + _ctl.b) == 0 and _spd ~= 0 then
-                    _bv.velocity = ((game.Workspace.CurrentCamera.CoordinateFrame.lookVector * (_lct.f + _lct.b)) + 
+                    _bv.Velocity = ((game.Workspace.CurrentCamera.CoordinateFrame.lookVector * (_lct.f + _lct.b)) + 
                                   ((game.Workspace.CurrentCamera.CoordinateFrame * CFrame.new(_lct.l + _lct.r, (_lct.f + _lct.b) * 0.2, 0).p) - 
-                                   game.Workspace.CurrentCamera.CoordinateFrame.p)) * _spd
+                                   game.Workspace.CurrentCamera.CoordinateFrame.p)) * _spd * _v9k2m
                 else
-                    _bv.velocity = Vector3.new(0, 0, 0)
+                    _bv.Velocity = Vector3.new(0, 0, 0)
                 end
-                _bg.cframe = game.Workspace.CurrentCamera.CoordinateFrame * CFrame.Angles(-math.rad((_ctl.f + _ctl.b) * 50 * _spd / _mxs), 0, 0)
+                _bg.CFrame = game.Workspace.CurrentCamera.CoordinateFrame * CFrame.Angles(-math.rad((_ctl.f + _ctl.b) * 50 * _spd / _mxs), 0, 0)
             end
             _bg:Destroy()
             _bv:Destroy()
-            _z5q3r()
+            resetHumanoidState()
         end)
 
         task.spawn(function()
@@ -270,14 +269,14 @@ _o7f6y.MouseButton1Click:Connect(function()
                     _tpw = true
                     while _tpw and _f2n9x and _hb:Wait() and _chr and _hum and _hum.Parent do
                         if _hum.MoveDirection.Magnitude > 0 then
-                            _chr:TranslateBy(_hum.MoveDirection)
+                            _chr:TranslateBy(_hum.MoveDirection * _v9k2m)
                         end
                     end
                 end)
             end
         end)
     else
-        _z5q3r() -- Disable noclip and reset states
+        resetHumanoidState()
     end
 end)
 
@@ -338,8 +337,8 @@ _d5n1j.MouseButton1Up:Connect(function()
 end)
 
 _w3r8p.CharacterAdded:Connect(function(_chr)
-    wait(0.7)
-    _z5q3r()
+    task.wait(0.7)
+    resetHumanoidState()
 end)
 
 _p8z2x.MouseButton1Click:Connect(function()
@@ -355,7 +354,7 @@ _p8z2x.MouseButton1Click:Connect(function()
                 local _hum = _chr and _chr:FindFirstChildWhichIsA("Humanoid")
                 while _tpw and _f2n9x and _hb:Wait() and _chr and _hum and _hum.Parent do
                     if _hum.MoveDirection.Magnitude > 0 then
-                        _chr:TranslateBy(_hum.MoveDirection)
+                        _chr:TranslateBy(_hum.MoveDirection * _v9k2m)
                     end
                 end
             end)
@@ -366,7 +365,7 @@ end)
 _m6c3w.MouseButton1Click:Connect(function()
     if _v9k2m <= 1 then
         _s1h9q.Text = "cannot be less than 1"
-        wait(1)
+        task.wait(1)
         _s1h9q.Text = tostring(_v9k2m)
     else
         _v9k2m = _v9k2m - 1
@@ -381,7 +380,7 @@ _m6c3w.MouseButton1Click:Connect(function()
                     local _hum = _chr and _chr:FindFirstChildWhichIsA("Humanoid")
                     while _tpw and _f2n9x and _hb:Wait() and _chr and _hum and _hum.Parent do
                         if _hum.MoveDirection.Magnitude > 0 then
-                            _chr:TranslateBy(_hum.MoveDirection)
+                            _chr:TranslateBy(_hum.MoveDirection * _v9k2m)
                         end
                     end
                 end)
